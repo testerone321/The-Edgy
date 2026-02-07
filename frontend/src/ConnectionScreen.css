@@ -1,0 +1,396 @@
+.connection-screen {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  background: #2a2a2a;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.connection-container {
+  background: transparent;
+  border-radius: 0;
+  padding: 40px 20px;
+  width: 100vw;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  margin: 0;
+}
+
+.header-with-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  width: 100%;
+  position: relative;
+}
+
+.info-button {
+  background: rgba(102, 126, 234, 0.2);
+  border: 2px solid #667eea;
+  color: #667eea;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.info-button:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.app-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  text-align: center;
+  margin: 0 0 10px 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: white;
+}
+
+.subtitle {
+  text-align: center;
+  color: #aaa;
+  margin: 0 0 40px 0;
+  font-size: 0.95rem;
+}
+
+.connection-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ddd;
+}
+
+.key-input {
+  padding: 15px;
+  font-size: 1rem;
+  border: 2px solid #555;
+  border-radius: 10px;
+  transition: border-color 0.3s;
+  outline: none;
+  background: #3a3a3a;
+  color: #fff;
+}
+
+.key-input:focus {
+  border-color: #667eea;
+  background: #404040;
+}
+
+.duration-select {
+  padding: 15px;
+  font-size: 1rem;
+  border: 2px solid #555;
+  border-radius: 10px;
+  transition: border-color 0.3s;
+  outline: none;
+  background: #3a3a3a;
+  cursor: pointer;
+  color: #fff;
+}
+
+.duration-select:focus {
+  border-color: #667eea;
+  background: #404040;
+}
+
+.difficulty-select {
+  padding: 15px;
+  font-size: 1rem;
+  border: 2px solid #555;
+  border-radius: 10px;
+  transition: border-color 0.3s;
+  outline: none;
+  background: #3a3a3a;
+  cursor: pointer;
+  color: #fff;
+}
+
+.difficulty-select:focus {
+  border-color: #667eea;
+  background: #404040;
+}
+
+.configure-link {
+  
+  font-size: 0.7rem;
+  background: transparent;
+  color: #667eea;
+  cursor: pointer;
+  align-content: end;
+  transition: all 0.3s;
+  font-weight: 600;
+}
+
+.configure-link:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.checkbox-group {
+  margin-top: 10px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  color: #ddd;
+  font-weight: 600;
+}
+
+.pot-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+.checkbox-text {
+  font-size: 0.95rem;
+}
+
+.checkbox-description {
+  margin: 0px 0 0 30px;
+  font-size: 0.8rem;
+  color: #aaa;
+  font-weight: normal;
+}
+
+.connect-button {
+  padding: 15px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.connect-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+}
+
+.connect-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.connect-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Info Dialog */
+.info-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  margin-top: 70px;
+  backdrop-filter: blur(5px);
+}
+
+.info-dialog {
+  background: #2a2a2a;
+  border-radius: 15px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  border: 2px solid #667eea;
+}
+
+.info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 2px solid #3a3a3a;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+}
+
+.info-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #fff;
+}
+
+.close-button {
+  background: transparent;
+  border: none;
+  color: #aaa;
+  font-size: 2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  line-height: 1;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button:hover {
+  color: #fff;
+  transform: scale(1.2);
+}
+
+.info-content {
+  padding: 20px 20px 20px 20px;
+  overflow-y: auto;
+  flex: 1;
+  color: #ddd;
+}
+
+.info-content section {
+  margin-bottom: 25px;
+}
+
+.info-content section:last-child {
+  margin-bottom: 0;
+}
+
+.info-content h3 {
+  margin: 0 0 12px 0;
+  color: #667eea;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.info-content p {
+  margin: 0 0 10px 0;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.info-content p:last-child {
+  margin-bottom: 0;
+}
+
+.info-content strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+.info-content ul {
+  margin: 10px 0 0 0;
+  padding-left: 20px;
+}
+
+.info-content li {
+  margin-bottom: 8px;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.info-content li:last-child {
+  margin-bottom: 0;
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+  .connection-container {
+    margin: 0;
+    padding: 30px 15px;
+  }
+
+  .header-with-info {
+    gap: 10px;
+  }
+
+  .info-button {
+    width: 35px;
+    height: 35px;
+    font-size: 1.1rem;
+  }
+  
+  .app-title {
+    font-size: 2rem;
+  }
+
+  .info-dialog {
+    max-width: 100%;
+    border-radius: 10px;
+  }
+
+  .info-header {
+    padding: 15px;
+  }
+
+  .info-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .info-content {
+    padding: 15px;
+  }
+
+  .info-content h3 {
+    font-size: 1.1rem;
+  }
+
+  .info-content p,
+  .info-content li {
+    font-size: 0.9rem;
+  }
+  
+  .app-title {
+    font-size: 2rem;
+  }
+}
