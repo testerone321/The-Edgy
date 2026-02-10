@@ -21,26 +21,32 @@ export function ConfigScreen({ onSave, onBack, initialDifficulty, initialConfig 
     onSave(finalDifficulty, config);
   };
 
-  const updatePhase = (phase: 'initial' | 'firstLimit' | 'multipleLimits', type: 'min' | 'max', value: number) => {
+  const updateConfig = (configType: 'initial' | 'firstLimit' | 'multipleLimits' | 'strokePosition', type: 'min' | 'max', value: number) => {
     const newConfig = { ...config };
     
-    if (phase === 'initial') {
+    if (configType === 'initial') {
       if (type === 'min') {
         newConfig.initialMin = Math.min(value, newConfig.initialMax - 1);
       } else {
         newConfig.initialMax = Math.max(value, newConfig.initialMin + 1);
       }
-    } else if (phase === 'firstLimit') {
+    } else if (configType === 'firstLimit') {
       if (type === 'min') {
         newConfig.firstLimitMin = Math.min(value, newConfig.firstLimitMax - 1);
       } else {
         newConfig.firstLimitMax = Math.max(value, newConfig.firstLimitMin + 1);
       }
-    } else {
+    } else if (configType === 'multipleLimits') {
       if (type === 'min') {
         newConfig.multipleLimitsMin = Math.min(value, newConfig.multipleLimitsMax - 1);
       } else {
         newConfig.multipleLimitsMax = Math.max(value, newConfig.multipleLimitsMin + 1);
+      }
+    } else if (configType === 'strokePosition') {
+      if (type === 'min') {
+        newConfig.minStrokePosition = Math.min(value, newConfig.maxStrokePosition - 1);
+      } else {
+        newConfig.maxStrokePosition = Math.max(value, newConfig.minStrokePosition + 1);
       }
     }
     
@@ -71,7 +77,7 @@ export function ConfigScreen({ onSave, onBack, initialDifficulty, initialConfig 
                 min="1"
                 max="100"
                 value={config.initialMin}
-                onChange={(e) => updatePhase('initial', 'min', parseInt(e.target.value))}
+                onChange={(e) => updateConfig('initial', 'min', parseInt(e.target.value))}
                 className="speed-slider"
               />
             </div>
@@ -83,7 +89,7 @@ export function ConfigScreen({ onSave, onBack, initialDifficulty, initialConfig 
                 min="1"
                 max="100"
                 value={config.initialMax}
-                onChange={(e) => updatePhase('initial', 'max', parseInt(e.target.value))}
+                onChange={(e) => updateConfig('initial', 'max', parseInt(e.target.value))}
                 className="speed-slider"
               />
             </div>
@@ -100,7 +106,7 @@ export function ConfigScreen({ onSave, onBack, initialDifficulty, initialConfig 
                 min="1"
                 max="100"
                 value={config.firstLimitMin}
-                onChange={(e) => updatePhase('firstLimit', 'min', parseInt(e.target.value))}
+                onChange={(e) => updateConfig('firstLimit', 'min', parseInt(e.target.value))}
                 className="speed-slider"
               />
             </div>
@@ -112,7 +118,7 @@ export function ConfigScreen({ onSave, onBack, initialDifficulty, initialConfig 
                 min="1"
                 max="100"
                 value={config.firstLimitMax}
-                onChange={(e) => updatePhase('firstLimit', 'max', parseInt(e.target.value))}
+                onChange={(e) => updateConfig('firstLimit', 'max', parseInt(e.target.value))}
                 className="speed-slider"
               />
             </div>
@@ -129,7 +135,7 @@ export function ConfigScreen({ onSave, onBack, initialDifficulty, initialConfig 
                 min="1"
                 max="100"
                 value={config.multipleLimitsMin}
-                onChange={(e) => updatePhase('multipleLimits', 'min', parseInt(e.target.value))}
+                onChange={(e) => updateConfig('multipleLimits', 'min', parseInt(e.target.value))}
                 className="speed-slider"
               />
             </div>
@@ -141,11 +147,41 @@ export function ConfigScreen({ onSave, onBack, initialDifficulty, initialConfig 
                 min="1"
                 max="100"
                 value={config.multipleLimitsMax}
-                onChange={(e) => updatePhase('multipleLimits', 'max', parseInt(e.target.value))}
+                onChange={(e) => updateConfig('multipleLimits', 'max', parseInt(e.target.value))}
                 className="speed-slider"
               />
             </div>
           </div>
+
+          <div className="phase-section">
+            <h3 className="phase-title">Position</h3>
+            <p className="phase-description">Settings for stroke length</p>
+            
+            <div className="slider-group">
+              <label>Minimum Position: {config.minStrokePosition}</label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={config.minStrokePosition}
+                onChange={(e) => updateConfig('strokePosition', 'min', parseInt(e.target.value))}
+                className="speed-slider"
+              />
+            </div>
+            
+            <div className="slider-group">
+              <label>Maximum Position: {config.maxStrokePosition}</label>
+              <input
+                type="range"
+                min="1"
+                max="100"
+                value={config.maxStrokePosition}
+                onChange={(e) => updateConfig('strokePosition', 'max', parseInt(e.target.value))}
+                className="speed-slider"
+              />
+            </div>
+          </div>
+
         </div>
 
         <div className="config-buttons">

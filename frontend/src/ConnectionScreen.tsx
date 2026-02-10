@@ -108,7 +108,7 @@ export function ConnectionScreen({ onConnect, onConfigure, initialDifficulty, in
               onClick={handleConfigure}
               className="configure-link"
             >
-              ⚙️ Configure Speed Settings
+              ⚙️ Configure Settings
             </button>
           </div>
 
