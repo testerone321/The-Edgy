@@ -8,6 +8,8 @@ export interface PhaseSpeedConfig {
   firstLimitMax: number;
   multipleLimitsMin: number;
   multipleLimitsMax: number;
+  minStrokePosition: number;
+  maxStrokePosition: number;
 }
 
 export interface SessionState {

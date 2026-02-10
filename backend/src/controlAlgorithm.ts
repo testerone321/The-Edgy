@@ -9,10 +9,6 @@ export class ControlAlgorithm {
   private static readonly PATTERN_CHANCE_FIRST_LIMIT = 12;
   private static readonly PATTERN_CHANCE_MULTIPLE_LIMITS = 7;
 
-  // Stroke length (used across all phases)
-  private static readonly STROKE_MIN = 30;
-  private static readonly STROKE_MAX = 100;
-
   // INITIAL Phase
   private static readonly INITIAL_HOLD_DURATION_MIN = 4000; // how long to keep same speed/position
   private static readonly INITIAL_HOLD_DURATION_MAX = 8000;
@@ -43,8 +39,6 @@ export class ControlAlgorithm {
   // CLIMAX Mode
   private static readonly CLIMAX_SPEED_MIN = 80;
   private static readonly CLIMAX_SPEED_MAX = 100;
-  private static readonly CLIMAX_STROKE_MIN = 40;
-  private static readonly CLIMAX_STROKE_MAX = 100;
   private static readonly CLIMAX_CHANGE_INTERVAL_MIN = 3000;
   private static readonly CLIMAX_CHANGE_INTERVAL_MAX = 8000;
 
@@ -205,7 +199,6 @@ export class ControlAlgorithm {
       patternChance: ControlAlgorithm.PATTERN_CHANCE_MULTIPLE_LIMITS
     };
 
-    // Initial pause after limit
     let pauseMin = config.initialPauseMin;
     let pauseMax = config.initialPauseMax;
     if (this.session.speedEscalated) {
@@ -217,7 +210,6 @@ export class ControlAlgorithm {
     await this.sleep(initialPause);
     if (this.shouldStop) return;
 
-    // Stroke-pause cycles
     while (!this.shouldStop && this.session.isActive && !this.session.isClimaxMode) {
       const usePattern = Math.random() < (config.patternChance / 100);
 
@@ -279,21 +271,15 @@ export class ControlAlgorithm {
     this.shouldStop = false;
 
     while (!this.shouldStop && this.session.isClimaxMode && this.session.isActive) {
-      // Chaotic maximum intensity
-      const strokeLength = this.randomInt(
-        ControlAlgorithm.CLIMAX_STROKE_MIN,
-        ControlAlgorithm.CLIMAX_STROKE_MAX
-      );
-      const maxStartPosition = 100 - strokeLength;
-      const startPosition = this.randomInt(0, maxStartPosition);
+      const { minPosition, maxPosition } = this.getMinMaxPosition(ControlPhase.CLIMAX);
 
       const command: StrokeCommand = {
-        minPosition: startPosition,
-        maxPosition: startPosition + strokeLength,
+        minPosition,
+        maxPosition,
         speed: this.randomInt(ControlAlgorithm.CLIMAX_SPEED_MIN, ControlAlgorithm.CLIMAX_SPEED_MAX)
       };
 
-      logger.debug(`[CLIMAX] Chaos Mode - Range: ${command.minPosition}%-${command.maxPosition}% (${strokeLength}% stroke), Speed: ${command.speed}%`);
+      logger.debug(`[CLIMAX] Chaos Mode - Range: ${command.minPosition}%-${command.maxPosition}%, Speed: ${command.speed}%`);
 
       await this.deviceController.stroke(this.session.connectionString, command);
 
@@ -328,19 +314,12 @@ export class ControlAlgorithm {
     holdMax: number
   ): Promise<void> {
     if (this.shouldStop) return;
-
-    // Generate random stroke parameters
-    const strokeLength = this.randomInt(ControlAlgorithm.STROKE_MIN, ControlAlgorithm.STROKE_MAX);
-    const maxStartPosition = 100 - strokeLength;
-    const startPosition = this.randomInt(0, maxStartPosition);
-
-    const minPosition = startPosition;
-    const maxPosition = startPosition + strokeLength;
+    const { minPosition, maxPosition } = this.getMinMaxPosition(this.session.phase);
     const speed = this.randomInt(speedMin, speedMax);
     const boostedSpeed = this.applyDesperationBonus(speed);
     const holdDuration = this.getHoldDuration(holdMin, holdMax);
 
-    logger.debug(`[${this.session.phase}] Range: ${minPosition}%-${maxPosition}% (${strokeLength}% stroke), Speed: ${boostedSpeed}% (holding for ${holdDuration / 1000}s)`);
+    logger.debug(`[${this.session.phase}] Range: ${minPosition}%-${maxPosition}%, Speed: ${boostedSpeed}% (holding for ${holdDuration / 1000}s)`);
 
     await this.deviceController.stroke(this.session.connectionString, {
       minPosition,
@@ -451,6 +430,18 @@ export class ControlAlgorithm {
     if (phase === ControlPhase.INITIAL) return this.session.phaseSpeedConfig.initialMax;
     if (phase === ControlPhase.FIRST_LIMIT) return this.session.phaseSpeedConfig.firstLimitMax;
     return this.session.phaseSpeedConfig.multipleLimitsMax;
+  }
+
+  private getMinMaxPosition(phase: ControlPhase): { minPosition: number; maxPosition: number } {
+    const factor = phase === ControlPhase.CLIMAX ? 0.5 : 0.33; // Wider strokes in climax mode
+    const strokeLengthMax = this.session.phaseSpeedConfig.maxStrokePosition - this.session.phaseSpeedConfig.minStrokePosition;
+    const strokeLengthMin = strokeLengthMax * factor | 0; // Ensure minimum stroke length is at least 1/3 (or 1/2 in climax) of the total range
+    const strokeLength = this.randomInt(strokeLengthMin, strokeLengthMax);
+    const maxStartPosition = this.session.phaseSpeedConfig.maxStrokePosition - strokeLength;
+    const minPosition = this.randomInt(this.session.phaseSpeedConfig.minStrokePosition, maxStartPosition);
+    const maxPosition = minPosition + strokeLength;
+
+    return { minPosition, maxPosition };
   }
 
 }

@@ -9,6 +9,8 @@ export const DIFFICULTY_PRESETS: Record<DifficultyLevel, PhaseSpeedConfig> = {
     firstLimitMax: 20,
     multipleLimitsMin: 1,
     multipleLimitsMax: 10,
+    minStrokePosition: 1,
+    maxStrokePosition: 100,
   },
   medium: {
     initialMin: 20,
@@ -17,6 +19,8 @@ export const DIFFICULTY_PRESETS: Record<DifficultyLevel, PhaseSpeedConfig> = {
     firstLimitMax: 30,
     multipleLimitsMin: 1,
     multipleLimitsMax: 20,
+    minStrokePosition: 0,
+    maxStrokePosition: 100,
   },
   hard: {
     initialMin: 40,
@@ -25,6 +29,8 @@ export const DIFFICULTY_PRESETS: Record<DifficultyLevel, PhaseSpeedConfig> = {
     firstLimitMax: 60,
     multipleLimitsMin: 10,
     multipleLimitsMax: 40,
+    minStrokePosition: 0,
+    maxStrokePosition: 100,
   },
   insane: {
     initialMin: 60,
@@ -33,6 +39,8 @@ export const DIFFICULTY_PRESETS: Record<DifficultyLevel, PhaseSpeedConfig> = {
     firstLimitMax: 80,
     multipleLimitsMin: 40,
     multipleLimitsMax: 80,
+    minStrokePosition: 0,
+    maxStrokePosition: 100,
   },
   custom: {
     // Custom starts with medium preset values
@@ -42,6 +50,8 @@ export const DIFFICULTY_PRESETS: Record<DifficultyLevel, PhaseSpeedConfig> = {
     firstLimitMax: 30,
     multipleLimitsMin: 1,
     multipleLimitsMax: 20,
+    minStrokePosition: 0,
+    maxStrokePosition: 100,
   },
 };
 
@@ -66,7 +76,9 @@ export function detectPresetFromConfig(config: PhaseSpeedConfig): DifficultyLeve
       config.firstLimitMin === presetConfig.firstLimitMin &&
       config.firstLimitMax === presetConfig.firstLimitMax &&
       config.multipleLimitsMin === presetConfig.multipleLimitsMin &&
-      config.multipleLimitsMax === presetConfig.multipleLimitsMax
+      config.multipleLimitsMax === presetConfig.multipleLimitsMax &&
+      config.minStrokePosition === presetConfig.minStrokePosition &&
+      config.maxStrokePosition === presetConfig.maxStrokePosition
     ) {
       return preset;
     }
@@ -85,6 +97,8 @@ export function hasConfigChanged(config1: PhaseSpeedConfig, config2: PhaseSpeedC
     config1.firstLimitMin !== config2.firstLimitMin ||
     config1.firstLimitMax !== config2.firstLimitMax ||
     config1.multipleLimitsMin !== config2.multipleLimitsMin ||
-    config1.multipleLimitsMax !== config2.multipleLimitsMax
+    config1.multipleLimitsMax !== config2.multipleLimitsMax ||
+    config1.minStrokePosition !== config2.minStrokePosition ||
+    config1.maxStrokePosition !== config2.maxStrokePosition
   );
 }

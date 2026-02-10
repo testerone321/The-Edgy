@@ -18,7 +18,7 @@ class Logger {
     private logStream?: fs.WriteStream;
 
     constructor() {
-        const enableDebug = process.env.NODE_ENV !== 'production' || process.env.DEBUG_MODE === 'true' || true;
+        const enableDebug = process.env.NODE_ENV !== 'production' || process.env.DEBUG_MODE === 'true';
 
         // Check if file logging is enabled
         const logToFile = process.env.LOG_TO_FILE === 'true';
