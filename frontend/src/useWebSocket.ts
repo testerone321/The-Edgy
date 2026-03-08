@@ -14,6 +14,7 @@ const getWebSocketUrl = () => {
   }
 };
 const WS_URL = getWebSocketUrl();
+const WS_KEEPALIVE_INTERVAL = 30000; // 30 second keepalive
 
 export function useWebSocket() {
   const [ws, setWs] = useState<WebSocket | null>(null);
@@ -44,6 +45,13 @@ export function useWebSocket() {
 
     websocket.onopen = () => {
       setConnected(true);
+
+      setInterval(() => {
+        if(websocket.readyState === WebSocket.OPEN) {
+          websocket.send(JSON.stringify({type: 'ping'}));
+          console.log('sent ping');
+        }
+      }, WS_KEEPALIVE_INTERVAL);
     };
 
     websocket.onmessage = (event) => {
@@ -135,6 +143,10 @@ export function useWebSocket() {
         }));
         break;
 
+      case 'pong':
+        console.log('pong received');
+        break;
+
       case 'error':
         console.error('Server error:', message.message);
         alert(message.message);
@@ -178,6 +190,12 @@ export function useWebSocket() {
     }
   }, [ws, sessionState.isClimaxMode]);
 
+  const ping = useCallback(() => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'ping' }));
+    }
+  }, [ws]);
+
   const disconnect = useCallback(() => {
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'disconnect' }));
@@ -202,6 +220,7 @@ export function useWebSocket() {
     startSession,
     pressLimitButton,
     toggleClimaxMode,
+    ping,
     disconnect,
     debugMode,
     debugPosition,
