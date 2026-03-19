@@ -121,6 +121,10 @@ async function handleMessage(sessionId: string, data: any, ws: WebSocket): Promi
       await handleDisconnect(sessionId, ws);
       break;
 
+    case 'ping':
+      ws.send(JSON.stringify({ type: 'pong' }));
+      break;
+
     default:
       ws.send(JSON.stringify({ type: 'error', message: 'Unknown message type' }));
   }
