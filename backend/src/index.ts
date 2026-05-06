@@ -123,6 +123,10 @@ async function handleMessage(sessionId: string, data: any, ws: WebSocket): Promi
       await handleClimaxButton(sessionId, data.activate, ws);
       break;
 
+    case 'ping':
+      ws.send(JSON.stringify({ type: 'pong' }));
+      break;
+
     case 'disconnect':
       await handleDisconnect(sessionId, ws);
       break;
