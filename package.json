@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "The Edgy",
   "scripts": {
-    "install-all": "cd backend && npm install && cd ../frontend && npm install",
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
     "dev:debug": "concurrently \"cd backend && npm run dev:debug\" \"cd frontend && npm run dev\"",
     "dev:prod": "concurrently \"cd backend && npm run dev:prod\" \"cd frontend && npm run dev\"",
