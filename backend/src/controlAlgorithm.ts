@@ -1,6 +1,7 @@
 import { SessionData, ControlPhase, StrokeCommand } from './types';
 import { DeviceController } from './deviceController';
 import { PatternRegistry } from './patterns';
+import { randomStrokeRange, randomInt } from './strokeUtils';
 import { logger } from './logger';
 
 export class ControlAlgorithm {
@@ -417,7 +418,7 @@ export class ControlAlgorithm {
   }
 
   private randomInt(min: number, max: number): number {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+    return randomInt(min, max);
   }
 
   private getSpeedMin(phase: ControlPhase): number {
@@ -433,15 +434,8 @@ export class ControlAlgorithm {
   }
 
   private getMinMaxPosition(phase: ControlPhase): { minPosition: number; maxPosition: number } {
-    const factor = phase === ControlPhase.CLIMAX ? 0.5 : 0.33; // Wider strokes in climax mode
-    const strokeLengthMax = this.session.phaseSpeedConfig.maxStrokePosition - this.session.phaseSpeedConfig.minStrokePosition;
-    const strokeLengthMin = strokeLengthMax * factor | 0; // Ensure minimum stroke length is at least 1/3 (or 1/2 in climax) of the total range
-    const strokeLength = this.randomInt(strokeLengthMin, strokeLengthMax);
-    const maxStartPosition = this.session.phaseSpeedConfig.maxStrokePosition - strokeLength;
-    const minPosition = this.randomInt(this.session.phaseSpeedConfig.minStrokePosition, maxStartPosition);
-    const maxPosition = minPosition + strokeLength;
-
-    return { minPosition, maxPosition };
+    const widthFactor = phase === ControlPhase.CLIMAX ? 0.5 : 0.33;
+    return randomStrokeRange(this.session.phaseSpeedConfig, widthFactor);
   }
 
 }

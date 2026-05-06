@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { ConnectionScreen } from './ConnectionScreen';
 import { ConfigScreen } from './ConfigScreen';
 import { MainScreen } from './MainScreen';
+import { SurvivalScreen } from './SurvivalScreen';
 import { useWebSocket } from './useWebSocket';
-import type { PhaseSpeedConfig, DifficultyLevel } from './types';
+import { useSettings } from './useSettings';
 import { getPresetForDifficulty } from './presets';
+import type { DifficultyLevel } from './types';
 import './App.css';
 
 type Screen = 'connection' | 'config' | 'main';
@@ -17,14 +19,12 @@ function App() {
     startSession,
     pressLimitButton,
     toggleClimaxMode,
+    sendSetTension,
     disconnect
   } = useWebSocket();
 
+  const { settings, update } = useSettings();
   const [currentScreen, setCurrentScreen] = useState<Screen>('connection');
-  const [difficulty, setDifficulty] = useState<DifficultyLevel>('medium');
-  const [phaseSpeedConfig, setPhaseSpeedConfig] = useState<PhaseSpeedConfig>(
-    getPresetForDifficulty('medium')
-  );
 
   if (!connected) {
     return (
@@ -39,13 +39,13 @@ function App() {
       <div className="app">
         <ConfigScreen
           onSave={(newDifficulty, newConfig) => {
-            setDifficulty(newDifficulty);
-            setPhaseSpeedConfig(newConfig);
+            update({ difficulty: newDifficulty, phaseSpeedConfig: newConfig });
             setCurrentScreen('connection');
           }}
           onBack={() => setCurrentScreen('connection')}
-          initialDifficulty={difficulty}
-          initialConfig={phaseSpeedConfig}
+          initialDifficulty={settings.difficulty}
+          initialConfig={settings.phaseSpeedConfig}
+          gameMode={settings.gameMode}
         />
       </div>
     );
@@ -55,18 +55,47 @@ function App() {
     return (
       <div className="app">
         <ConnectionScreen
-          onConnect={(deviceKey, duration, newDifficulty, newConfig, potEnabled) => {
-            setDifficulty(newDifficulty);
-            setPhaseSpeedConfig(newConfig);
-            connectDevice(deviceKey, duration, newConfig, potEnabled);
+          deviceKey={settings.deviceKey}
+          onDeviceKeyChange={(key) => update({ deviceKey: key })}
+          duration={settings.duration}
+          onDurationChange={(d) => update({ duration: d })}
+          difficulty={settings.difficulty}
+          onDifficultyChange={(d: DifficultyLevel) => {
+            const config = d !== 'custom' ? getPresetForDifficulty(d) : settings.phaseSpeedConfig;
+            update({ difficulty: d, phaseSpeedConfig: config });
           }}
-          onConfigure={(currentDifficulty, currentConfig) => {
-            setDifficulty(currentDifficulty);
-            setPhaseSpeedConfig(currentConfig);
-            setCurrentScreen('config');
+          phaseSpeedConfig={settings.phaseSpeedConfig}
+          potEnabled={settings.potEnabled}
+          onPotEnabledChange={(v) => update({ potEnabled: v })}
+          gameMode={settings.gameMode}
+          onGameModeChange={(m) => update({ gameMode: m })}
+          onConnect={() => {
+            connectDevice(
+              settings.deviceKey.trim(),
+              settings.duration,
+              settings.phaseSpeedConfig,
+              settings.potEnabled,
+              settings.gameMode
+            );
           }}
-          initialDifficulty={difficulty}
-          initialConfig={phaseSpeedConfig}
+          onConfigure={() => setCurrentScreen('config')}
+        />
+      </div>
+    );
+  }
+
+  if (sessionState.gameMode === 'survival') {
+    return (
+      <div className="app">
+        <SurvivalScreen
+          sessionState={sessionState}
+          onStartSession={startSession}
+          onEdgeButton={pressLimitButton}
+          onSetTension={sendSetTension}
+          onBack={() => {
+            disconnect();
+            setCurrentScreen('connection');
+          }}
         />
       </div>
     );

@@ -1,4 +1,4 @@
-import { SessionData, ControlPhase, DurationLevel, PhaseSpeedConfig } from './types';
+import { SessionData, ControlPhase, DurationLevel, PhaseSpeedConfig, GameMode } from './types';
 import { logger } from './logger';
 
 export class SessionManager {
@@ -10,7 +10,8 @@ export class SessionManager {
     connectionString: string,
     duration: DurationLevel,
     phaseSpeedConfig: PhaseSpeedConfig,
-    potEnabled: boolean = true
+    potEnabled: boolean = true,
+    gameMode: GameMode = 'classic'
   ): SessionData {
     const edgeTarget = this.calculateEdgeTarget(duration);
     
@@ -31,7 +32,12 @@ export class SessionManager {
       speedEscalated: false,
       isPunishmentMode: false,
       punishmentEndTime: 0,
-      potEnabled
+      potEnabled,
+      gameMode,
+      survivalTensionLevel: 0,
+      survivalPressureSpike: 0,
+      survivalEdgeCount: 0,
+      survivalStartTime: 0,
     };
     this.sessions.set(sessionId, session);
     logger.info(`Session created: ${sessionId}; Duration: ${duration}; Target: ${edgeTarget} edges; POT: ${potEnabled}`);

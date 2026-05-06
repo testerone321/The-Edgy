@@ -18,15 +18,24 @@ export class MockDeviceController {
   }
 
   async stroke(connectionKey: string, command: StrokeCommand): Promise<void> {
-    
+    const wasRunning = this.isRunning;
+    const speedChanged = command.speed !== this.currentSpeed;
+    const rangeChanged = command.minPosition !== this.minPosition || command.maxPosition !== this.maxPosition;
+
     this.currentSpeed = command.speed;
     this.minPosition = command.minPosition;
     this.maxPosition = command.maxPosition;
     this.isRunning = true;
-    
+
+    if (!wasRunning) {
+      logger.debug(`[MOCK] Stroke started — speed: ${command.speed}%, range: [${command.minPosition}, ${command.maxPosition}]`);
+    } else if (speedChanged || rangeChanged) {
+      logger.debug(`[MOCK] Stroke updated — speed: ${command.speed}%${rangeChanged ? `, range: [${command.minPosition}, ${command.maxPosition}]` : ''}`);
+    }
+
     // Set initial position to min
     this.currentPosition = command.minPosition;
-    
+
     // Start animation loop if not already running
     if (!this.intervalId) {
       this.startAnimation();
@@ -34,6 +43,9 @@ export class MockDeviceController {
   }
 
   async stop(connectionKey: string): Promise<void> {
+    if (this.isRunning) {
+      logger.debug(`[MOCK] Stroke stopped — last position: ${this.currentPosition.toFixed(1)}, last speed: ${this.currentSpeed}%`);
+    }
     this.isRunning = false;
     this.currentSpeed = 0;
     
@@ -43,6 +55,11 @@ export class MockDeviceController {
     }
     
     this.notifyPositionUpdate();
+  }
+
+  async setSpeed(connectionKey: string, speed: number): Promise<void> {
+    this.currentSpeed = speed;
+    logger.debug(`[MOCK] Speed updated — speed: ${speed}%`);
   }
 
   setPositionUpdateCallback(callback: (position: number, speed: number) => void): void {

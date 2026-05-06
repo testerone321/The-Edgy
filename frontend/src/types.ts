@@ -1,5 +1,6 @@
 export type DurationLevel = 'short' | 'medium' | 'long' | 'insane';
 export type DifficultyLevel = 'easy' | 'medium' | 'hard' | 'insane' | 'custom';
+export type GameMode = 'classic' | 'survival';
 
 export interface PhaseSpeedConfig {
   initialMin: number;
@@ -30,6 +31,14 @@ export interface SessionState {
   // Punishment mode
   isPunishmentMode: boolean;
   punishmentEndTime: number;
+  // Game mode
+  gameMode: GameMode;
+  // Survival mode state
+  survivalTensionLevel: number; // 0-100
+  survivalPressureSpike: number; // additive speed bonus %
+  survivalEdgeCount: number;
+  survivalIsPaused: boolean;
+  survivalPauseEndsAt: number; // timestamp
 }
 
 export interface Message {

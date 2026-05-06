@@ -68,4 +68,17 @@ export class DeviceController {
       logger.error('Failed to stop', error);
     }
   }
+
+  async setSpeed(connectionKey: string, speed: number): Promise<void> {
+    try {
+      await axios.put(
+        `${this.baseUrl}/hamp/velocity`,
+        { velocity: speed },
+        { headers: { 'X-Connection-Key': connectionKey } }
+      );
+      logger.debug(`Device speed updated: ${speed}%`);
+    } catch (error) {
+      logger.error('Failed to set speed', error);
+    }
+  }
 }

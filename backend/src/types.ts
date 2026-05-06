@@ -1,4 +1,5 @@
 export type DurationLevel = 'short' | 'medium' | 'long' | 'insane';
+export type GameMode = 'classic' | 'survival';
 
 export interface PhaseSpeedConfig {
   initialMin: number;
@@ -31,6 +32,13 @@ export interface SessionData {
   isPunishmentMode: boolean;
   punishmentEndTime: number; // Timestamp when punishment ends
   potEnabled: boolean; // POT (Punishment On Target) feature enabled
+  // Game mode
+  gameMode: GameMode;
+  // Survival mode state
+  survivalTensionLevel: number; // 0-100
+  survivalPressureSpike: number; // additive speed bonus accumulated
+  survivalEdgeCount: number;
+  survivalStartTime: number;
 }
 
 export enum ControlPhase {
