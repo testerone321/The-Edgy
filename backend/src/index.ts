@@ -7,6 +7,7 @@ import { SessionManager } from './sessionManager';
 import { DeviceController } from './deviceController';
 import { MockDeviceController } from './mockDeviceController';
 import { ControlAlgorithm } from './controlAlgorithm';
+import { SurvivalAlgorithm } from './survivalAlgorithm';
 import { logger } from './logger';
 
 const app = express();
@@ -32,7 +33,7 @@ const sessionManager = new SessionManager();
 const deviceController = DEBUG_MODE ? new MockDeviceController() : new DeviceController();
 
 // Map to store ControlAlgorithm instances per session
-const algorithmInstances = new Map<string, ControlAlgorithm>();
+const algorithmInstances = new Map<string, ControlAlgorithm | SurvivalAlgorithm>();
 
 if (DEBUG_MODE) {
   logger.debug('DEBUG MODE ENABLED');
@@ -101,6 +102,7 @@ async function handleMessage(sessionId: string, data: any, ws: WebSocket): Promi
         data.duration || 'medium',
         data.phaseSpeedConfig,
         data.potEnabled !== undefined ? data.potEnabled : true,
+        data.gameMode || 'classic',
         ws
       );
       break;
@@ -113,16 +115,16 @@ async function handleMessage(sessionId: string, data: any, ws: WebSocket): Promi
       await handleLimitButton(sessionId, ws);
       break;
 
+    case 'set_tension':
+      handleSetTension(sessionId, data.tension, ws);
+      break;
+
     case 'climax_button':
       await handleClimaxButton(sessionId, data.activate, ws);
       break;
 
     case 'disconnect':
       await handleDisconnect(sessionId, ws);
-      break;
-
-    case 'ping':
-      ws.send(JSON.stringify({ type: 'pong' }));
       break;
 
     default:
@@ -136,6 +138,7 @@ async function handleHandyConnection(
   duration: string,
   phaseSpeedConfig: any,
   potEnabled: boolean,
+  gameMode: string,
   ws: WebSocket
 ): Promise<void> {
   const connected = await deviceController.connect(deviceKey);
@@ -147,13 +150,15 @@ async function handleHandyConnection(
       deviceKey, 
       duration as any,
       phaseSpeedConfig,
-      potEnabled
+      potEnabled,
+      (gameMode === 'survival' ? 'survival' : 'classic')
     );
     ws.send(JSON.stringify({ 
       type: 'device_connected', 
       success: true,
       edgeTarget: session.edgeTarget,
-      duration: session.duration
+      duration: session.duration,
+      gameMode: session.gameMode
     }));
   } else {
     ws.send(JSON.stringify({ 
@@ -179,12 +184,35 @@ async function handleStartSession(sessionId: string, ws: WebSocket): Promise<voi
   // Set the session start time when the session actually starts
   session.sessionStartTime = Date.now();
 
-  // Create new algorithm instance for this session
+  const send = (data: object) => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(data));
+    }
+  };
+
+  if (session.gameMode === 'survival') {
+    const algorithm = new SurvivalAlgorithm(session, deviceController as any, send);
+    algorithmInstances.set(sessionId, algorithm);
+    algorithm.start().catch(err => logger.error('Survival algorithm error', err));
+
+    ws.send(JSON.stringify({
+      type: 'session_started',
+      phase: 'SURVIVAL',
+      limitCount: 0,
+      sessionStartTime: session.sessionStartTime,
+      gameMode: 'survival',
+      isClimaxMode: false,
+      isPunishmentMode: false,
+      punishmentEndTime: 0
+    }));
+    return;
+  }
+
+  // Classic mode
   const algorithm = new ControlAlgorithm(
     session, 
     deviceController as any,
     (phase) => {
-      // Send phase change to frontend
       ws.send(JSON.stringify({
         type: 'phase_changed',
         phase,
@@ -194,17 +222,16 @@ async function handleStartSession(sessionId: string, ws: WebSocket): Promise<voi
   );
   algorithmInstances.set(sessionId, algorithm);
   
-  // Start algorithm in background (don't await - it runs continuously)
   algorithm.start().catch(err => {
     logger.error('Algorithm error', err);
   });
   
-  // Send confirmation immediately
   ws.send(JSON.stringify({ 
     type: 'session_started',
     phase: session.phase,
     limitCount: session.limitCount,
     sessionStartTime: session.sessionStartTime,
+    gameMode: 'classic',
     isClimaxMode: session.isClimaxMode,
     isPunishmentMode: session.isPunishmentMode,
     punishmentEndTime: session.punishmentEndTime
@@ -224,7 +251,13 @@ async function handleLimitButton(sessionId: string, ws: WebSocket): Promise<void
     return;
   }
 
-  await algorithm.handleLimitButton();
+  if (session.gameMode === 'survival') {
+    await (algorithm as SurvivalAlgorithm).handleEdge();
+    // survival_pause_start / survival_pause_end are sent by the algorithm itself
+    return;
+  }
+
+  await (algorithm as ControlAlgorithm).handleLimitButton();
   
   ws.send(JSON.stringify({ 
     type: 'limit_registered',
@@ -243,13 +276,18 @@ async function handleClimaxButton(sessionId: string, activate: boolean, ws: WebS
     return;
   }
 
+  if (session.gameMode === 'survival') {
+    // Climax button is not used in Survival mode
+    return;
+  }
+
   const algorithm = algorithmInstances.get(sessionId);
   if (!algorithm) {
     ws.send(JSON.stringify({ type: 'error', message: 'Algorithm not initialized' }));
     return;
   }
 
-  await algorithm.handleClimaxMode(activate);
+  await (algorithm as ControlAlgorithm).handleClimaxMode(activate);
   
   ws.send(JSON.stringify({ 
     type: 'climax_mode',
@@ -258,6 +296,14 @@ async function handleClimaxButton(sessionId: string, activate: boolean, ws: WebS
     isPunishmentMode: session.isPunishmentMode,
     punishmentEndTime: session.punishmentEndTime
   }));
+}
+
+function handleSetTension(sessionId: string, tension: number, ws: WebSocket): void {
+  const session = sessionManager.getSession(sessionId);
+  if (!session || session.gameMode !== 'survival') return;
+  const algorithm = algorithmInstances.get(sessionId) as SurvivalAlgorithm | undefined;
+  if (!algorithm) return;
+  algorithm.updateTension(tension);
 }
 
 async function handleDisconnect(sessionId: string, ws: WebSocket): Promise<void> {

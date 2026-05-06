@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import type { SessionState, Message, DurationLevel, PhaseSpeedConfig } from './types';
+import type { SessionState, Message, DurationLevel, PhaseSpeedConfig, GameMode } from './types';
 
 // Use current hostname for WebSocket connection (works for localhost and network IP)
 // In production, use wss:// and same origin (no explicit port needed)
@@ -14,7 +14,6 @@ const getWebSocketUrl = () => {
   }
 };
 const WS_URL = getWebSocketUrl();
-const WS_KEEPALIVE_INTERVAL = 30000; // 30 second keepalive
 
 export function useWebSocket() {
   const [ws, setWs] = useState<WebSocket | null>(null);
@@ -33,7 +32,13 @@ export function useWebSocket() {
     goalpostMoved: false,
     speedEscalated: false,
     isPunishmentMode: false,
-    punishmentEndTime: 0
+    punishmentEndTime: 0,
+    gameMode: 'classic',
+    survivalTensionLevel: 0,
+    survivalPressureSpike: 0,
+    survivalEdgeCount: 0,
+    survivalIsPaused: false,
+    survivalPauseEndsAt: 0,
   });
   const [connected, setConnected] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
@@ -45,13 +50,6 @@ export function useWebSocket() {
 
     websocket.onopen = () => {
       setConnected(true);
-
-      setInterval(() => {
-        if(websocket.readyState === WebSocket.OPEN) {
-          websocket.send(JSON.stringify({type: 'ping'}));
-          console.log('sent ping');
-        }
-      }, WS_KEEPALIVE_INTERVAL);
     };
 
     websocket.onmessage = (event) => {
@@ -94,7 +92,8 @@ export function useWebSocket() {
             ...prev, 
             deviceConnected: true,
             edgeTarget: message.edgeTarget || 0,
-            duration: message.duration || 'medium'
+            duration: message.duration || 'medium',
+            gameMode: message.gameMode || 'classic',
           }));
         } else {
           alert(message.message || 'Failed to connect to device');
@@ -143,13 +142,46 @@ export function useWebSocket() {
         }));
         break;
 
-      case 'pong':
-        console.log('pong received');
-        break;
-
       case 'error':
         console.error('Server error:', message.message);
         alert(message.message);
+        break;
+
+      // Survival mode messages
+      case 'survival_update':
+        setSessionState(prev => ({
+          ...prev,
+          survivalTensionLevel: message.tensionLevel ?? prev.survivalTensionLevel,
+          survivalPressureSpike: message.pressureSpike ?? prev.survivalPressureSpike,
+          survivalEdgeCount: message.edgeCount ?? prev.survivalEdgeCount,
+          sessionStartTime: message.survivalStartTime || prev.sessionStartTime,
+        }));
+        break;
+
+      case 'survival_pause_start':
+        setSessionState(prev => ({
+          ...prev,
+          survivalIsPaused: true,
+          survivalPauseEndsAt: message.pauseEndsAt || (Date.now() + (message.pauseDuration || 0)),
+          survivalEdgeCount: message.edgeCount ?? prev.survivalEdgeCount,
+          survivalPressureSpike: message.pressureSpike ?? prev.survivalPressureSpike,
+        }));
+        break;
+
+      case 'survival_pause_end':
+        setSessionState(prev => ({
+          ...prev,
+          survivalIsPaused: false,
+          survivalPauseEndsAt: 0,
+          survivalEdgeCount: message.edgeCount ?? prev.survivalEdgeCount,
+        }));
+        break;
+
+      case 'survival_spike':
+        setSessionState(prev => ({
+          ...prev,
+          survivalPressureSpike: message.pressureSpike ?? prev.survivalPressureSpike,
+        }));
         break;
     }
   };
@@ -158,7 +190,8 @@ export function useWebSocket() {
     deviceKey: string, 
     duration: DurationLevel,
     phaseSpeedConfig: PhaseSpeedConfig,
-    potEnabled: boolean = true
+    potEnabled: boolean = true,
+    gameMode: GameMode = 'classic'
   ) => {
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ 
@@ -166,7 +199,8 @@ export function useWebSocket() {
         deviceKey, 
         duration, 
         phaseSpeedConfig,
-        potEnabled
+        potEnabled,
+        gameMode,
       }));
     }
   }, [ws]);
@@ -190,12 +224,6 @@ export function useWebSocket() {
     }
   }, [ws, sessionState.isClimaxMode]);
 
-  const ping = useCallback(() => {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'ping' }));
-    }
-  }, [ws]);
-
   const disconnect = useCallback(() => {
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'disconnect' }));
@@ -209,8 +237,19 @@ export function useWebSocket() {
       sessionDuration: 0,
       sessionStartTime: 0,
       isClimaxMode: false,
-      phase: 'INITIAL'
+      phase: 'INITIAL',
+      survivalIsPaused: false,
+      survivalPauseEndsAt: 0,
+      survivalEdgeCount: 0,
+      survivalPressureSpike: 0,
+      survivalTensionLevel: 0,
     }));
+  }, [ws]);
+
+  const sendSetTension = useCallback((tension: number) => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'set_tension', tension }));
+    }
   }, [ws]);
 
   return {
@@ -220,7 +259,7 @@ export function useWebSocket() {
     startSession,
     pressLimitButton,
     toggleClimaxMode,
-    ping,
+    sendSetTension,
     disconnect,
     debugMode,
     debugPosition,

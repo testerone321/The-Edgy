@@ -1,5 +1,3 @@
-# How The Edgy Works
-
 ## 🎯 Phases
 
 **Before the Edge (0 edges):** Gentle start with varied speeds and patterns. After 4-8 seconds a new speed is chosen.

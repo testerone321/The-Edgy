@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { PhaseSpeedConfig, DifficultyLevel } from './types';
+import type { PhaseSpeedConfig, DifficultyLevel, GameMode } from './types';
 import { detectPresetFromConfig, hasConfigChanged } from './presets';
 import './ConfigScreen.css';
 
@@ -8,9 +8,10 @@ interface ConfigScreenProps {
   onBack: () => void;
   initialDifficulty: DifficultyLevel;
   initialConfig: PhaseSpeedConfig;
+  gameMode?: GameMode;
 }
 
-export function ConfigScreen({ onSave, onBack, initialDifficulty, initialConfig }: ConfigScreenProps) {
+export function ConfigScreen({ onSave, onBack, initialDifficulty, initialConfig, gameMode = 'classic' }: ConfigScreenProps) {
   const [difficulty, setDifficulty] = useState<DifficultyLevel>(initialDifficulty);
   const [config, setConfig] = useState<PhaseSpeedConfig>(initialConfig);
 
@@ -62,10 +63,14 @@ export function ConfigScreen({ onSave, onBack, initialDifficulty, initialConfig 
       <div className="config-container">
         <h1 className="config-title">Speed Configuration</h1>
         <p className="config-subtitle">
-          Current preset: <strong>{difficulty === 'custom' ? 'Custom' : difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}</strong>
+          {gameMode === 'survival'
+            ? 'Stroke Length Configuration'
+            : <>Current preset: <strong>{difficulty === 'custom' ? 'Custom' : difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}</strong></>}
         </p>
 
         <div className="phase-config">
+          {gameMode === 'classic' && (
+            <>
           <div className="phase-section">
             <h3 className="phase-title">Before the Edge</h3>
             <p className="phase-description">The Handy will start with this settings</p>
@@ -152,6 +157,8 @@ export function ConfigScreen({ onSave, onBack, initialDifficulty, initialConfig 
               />
             </div>
           </div>
+            </>
+          )}
 
           <div className="phase-section">
             <h3 className="phase-title">Position</h3>

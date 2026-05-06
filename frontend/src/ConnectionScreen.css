@@ -25,9 +25,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   box-shadow: none;
   margin: 0;
+  overflow-y: auto;
 }
 
 .header-with-info {
@@ -88,6 +89,9 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  flex: 1;
+  width: 100%;
+  max-width: 400px;
 }
 
 .input-group {
@@ -200,8 +204,64 @@
   font-weight: normal;
 }
 
+/* Mode selector cards */
+.mode-selector {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.mode-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 10px;
+  background: #3a3a3a;
+  border: 2px solid #555;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  color: #ccc;
+}
+
+.mode-card:hover {
+  border-color: #667eea;
+  background: #404040;
+  transform: translateY(-1px);
+}
+
+.mode-card--active {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.15);
+  color: #fff;
+}
+
+.mode-card__icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.mode-card__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: inherit;
+}
+
+.mode-card__desc {
+  font-size: 0.72rem;
+  color: #999;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.mode-card--active .mode-card__desc {
+  color: #bbb;
+}
+
 .connect-button {
-  padding: 15px;
+  margin-top: auto;
   font-size: 1.1rem;
   font-weight: 700;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
